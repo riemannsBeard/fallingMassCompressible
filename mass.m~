@@ -86,28 +86,18 @@ u_1 = 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
 xi_1 = 1 + gamma/(gamma-1)*u_1.^2;
 eta_1 = 1 - (Cp*(xi_1 - 1) - 1)/Ca;
 
-% Critical time (xi = b)
 t1 = t(xi_1 < b);
+
+
+func = @(t) 1 + gamma/(gamma-1)*u_1.^2 - b;
+x0 = 1; % starting point
+roots = fzero(func,x0)
+
+% Critical time (xi = b)
 tb = t1(end);
 tbb = -A*2*gamma/(gamma + 1)*(1 - b^((1 + gamma)/(2*gamma))) +...
     B*2*gamma/(1 - gamma)*(1 - b^((1 - gamma)/(2*gamma)));
 etab = 1 - (Cp*(b - 1) - 1)/Ca;
-
-% Numerically, solving the nonlinear equation
-% ff = @(t) 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
-%   -2)+gamma)).^2.*((-1)+gamma).^2.*gamma.^2.*t+((2.*A+B.*((-2)+ ...
-%   gamma)).^3.*((-1)+gamma).^3.*gamma.^4.*(16.*(A+(-1).*B).^3.* ...
-%   gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+gamma)).*((-1)+gamma).*t.^2)).^( ...
-%   1/2)).^(-1/3)+(-1).*2.^(-2/3).*(2.*A+B.*((-2)+gamma)).^(-1).* ...
-%   gamma.^(-1).*((-3).*a.*(2.*A+B.*((-2)+gamma)).^2.*((-1)+gamma) ...
-%   .^2.*gamma.^2.*t+((2.*A+B.*((-2)+gamma)).^3.*((-1)+gamma).^3.* ...
-%   gamma.^4.*(16.*(A+(-1).*B).^3.*gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+ ...
-%   gamma)).*((-1)+gamma).*t.^2)).^(1/2)).^(1/3);
-% 
-% gg = @(t) (1 + gamma/(gamma-1)*ff(t).^2 - b);
-% t0 = 0; % starting point
-% tb = fzero(gg, x0);
-
 
 %% Sonic theoretical approximate solution (alpha, beta << 1)
 % Coefficients
@@ -116,12 +106,6 @@ D_ = A*b^((1 - gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
 
 xi_2 = b + (t - tb)/D_;
 eta_2 = 1 - (Cp*(xi_2 - 1) - 1)/Ca;
-
-tf = 1 - (Ca/Cp + 1 + 1/Cp - b)*D_;
-
-%% Final values
-eta_f = 0;
-xi_f = Ca/Cp + 1 + 1/Cp;
 
 %% Complete theoretical solution (alpha, beta << 1)
 xi_ = [xi_1(xi_1 < b); xi_2(xi_2 >= b)];
