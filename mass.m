@@ -93,31 +93,50 @@ tbb = -A*2*gamma/(gamma + 1)*(1 - b^((1 + gamma)/(2*gamma))) +...
     B*2*gamma/(1 - gamma)*(1 - b^((1 - gamma)/(2*gamma)));
 etab = 1 - (Cp*(b - 1) - 1)/Ca;
 
-% Numerically, solving the nonlinear equation
-% ff = @(t) 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
-%   -2)+gamma)).^2.*((-1)+gamma).^2.*gamma.^2.*t+((2.*A+B.*((-2)+ ...
-%   gamma)).^3.*((-1)+gamma).^3.*gamma.^4.*(16.*(A+(-1).*B).^3.* ...
-%   gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+gamma)).*((-1)+gamma).*t.^2)).^( ...
-%   1/2)).^(-1/3)+(-1).*2.^(-2/3).*(2.*A+B.*((-2)+gamma)).^(-1).* ...
-%   gamma.^(-1).*((-3).*a.*(2.*A+B.*((-2)+gamma)).^2.*((-1)+gamma) ...
-%   .^2.*gamma.^2.*t+((2.*A+B.*((-2)+gamma)).^3.*((-1)+gamma).^3.* ...
-%   gamma.^4.*(16.*(A+(-1).*B).^3.*gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+ ...
-%   gamma)).*((-1)+gamma).*t.^2)).^(1/2)).^(1/3);
-% 
-% gg = @(t) (1 + gamma/(gamma-1)*ff(t).^2 - b);
-% t0 = 0; % starting point
-% tb = fzero(gg, x0);
+%% Numerically, solving the nonlinear equation
+ff = @(t) 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
+  -2)+gamma)).^2.*((-1)+gamma).^2.*gamma.^2.*t+((2.*A+B.*((-2)+ ...
+  gamma)).^3.*((-1)+gamma).^3.*gamma.^4.*(16.*(A+(-1).*B).^3.* ...
+  gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+gamma)).*((-1)+gamma).*t.^2)).^( ...
+  1/2)).^(-1/3)+(-1).*2.^(-2/3).*(2.*A+B.*((-2)+gamma)).^(-1).* ...
+  gamma.^(-1).*((-3).*a.*(2.*A+B.*((-2)+gamma)).^2.*((-1)+gamma) ...
+  .^2.*gamma.^2.*t+((2.*A+B.*((-2)+gamma)).^3.*((-1)+gamma).^3.* ...
+  gamma.^4.*(16.*(A+(-1).*B).^3.*gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+ ...
+  gamma)).*((-1)+gamma).*t.^2)).^(1/2)).^(1/3);
 
+gg = @(t) (1 + gamma/(gamma-1)*ff(t).^2 - b);
+t0 = 0.1; % starting point
+tb_ = fzero(gg, t0);
 
 %% Sonic theoretical approximate solution (alpha, beta << 1)
 % Coefficients
 C_ = A*2*gamma/(1 + gamma) - 2*gamma/(1 - gamma)*B;
 D_ = A*b^((1 - gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
 
-xi_2 = b + (t - tb)/D_;
+% First order solution
+% xi_2 = b + (t - tb)/D_;
+
+% Second order solution
+phi = A*b^((1-gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
+psi = A*(1-gamma)/(4*gamma)*b^((1-3*gamma)/(2*gamma)) -...
+    B*(1 - 3*gamma)/(4*gamma)*b^((1 - 5*gamma)/(2*gamma));
+xi_2 = b + (-phi + sqrt(phi^2 + 4*psi*(t - tb)))/(2*psi);
+
+
 eta_2 = 1 - (Cp*(xi_2 - 1) - 1)/Ca;
 
 tf = 1 - (Ca/Cp + 1 + 1/Cp - b)*D_;
+
+
+
+%% Critical time
+% tbb = (b - 1)*D_;
+% xibb = 1 + tbb/D_;
+
+tbb = psi*(2*b - 1 - b^2) + phi*(b - 1);
+xibb = b;
+etabb = 1 - (Cp*(xibb - 1) - 1)/Ca;
+
 
 %% Final values
 eta_f = 0;
@@ -210,7 +229,7 @@ xlabel('$\tau$')
 %%
 figure,
 subplot(311), plot(t, eta, t_, eta_, 'r--', tb, etab, 'o',...
-    tbb, etab, 's'), hold on
+    tbb, etabb, 's'), hold on
 % ylim([0 1])
 % plot(t(end), etaf, 'ro'), hold on
 % plot(t(end), etaft, 'gs')
@@ -229,7 +248,7 @@ ylabel('$\dot{\eta}$')
 
 % figure,
 subplot(313), plot(t, xi, t_, xi_, 'r--',...
-    t, xi*0 + b, 'k--', tb, b, 'o', tbb, b, 's'), hold on
+    t, xi*0 + b, 'k--', tb, b, 'o', tbb, xibb, 's'), hold on
 % plot(t(end), xif, 'ro'), hold on
 % plot(t(end), xift, 'gs')
 % legend('Exact', 'Num. std.', 'Theo. std.')
@@ -263,7 +282,7 @@ axis square
 %%
 figure,
 subplot(211), plot(t, eta, t_, eta_, 'r--', tb, etab, 'o',...
-    tbb, etab, 's'), hold on
+    tbb, etabb, 's'), hold on
 % ylim([0 1])
 % plot(t(end), etaf, 'ro'), hold on
 % plot(t(end), etaft, 'gs')
@@ -273,7 +292,7 @@ xlabel('$\tau$')
 
 figure,
 plot(xi, eta, xi_, eta_, 'r--', tb, b, 'o',...
-    tbb, b, 's'), hold on
+    tbb, xibb, 's'), hold on
 % ylim([0 1])
 % plot(t(end), etaf, 'ro'), hold on
 % plot(t(end), etaft, 'gs')
