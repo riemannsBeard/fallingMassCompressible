@@ -7,6 +7,7 @@ FS = 18;
 LW = 1.5;
 set(0, 'defaultAxesFontSize', FS)
 set(0, 'defaultLineLineWidth', LW)
+set(0, 'defaultAxesLineWidth', 1.25)
 set(0, 'defaultAxesTickLabelInterpreter', 'Latex')
 set(0, 'defaultTextInterpreter', 'Latex')
 set(0, 'defaultLegendInterpreter', 'Latex')
@@ -54,7 +55,7 @@ tf = 0.75*tc;
 tspan = linspace(0, tf/tc, 1e3);
 y0 = [1, 0, 1];
 
-[t, y] = ode23s(@(t, y) ode_mass(t, y, Ca, Cp, gamma, Lambda, beta,...
+[t, y] = ode45(@(t, y) ode_mass(t, y, Ca, Cp, gamma, Lambda, beta,...
     alpha0), tspan, y0);
 
 eta = y(:,1);
@@ -82,16 +83,52 @@ u_1 = 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
   gamma.^4.*(16.*(A+(-1).*B).^3.*gamma.^2+9.*a.^2.*(2.*A+B.*((-2)+ ...
   gamma)).*((-1)+gamma).*t.^2)).^(1/2)).^(1/3);
 
-% xi_1 = (u_1.^2 + 1).^(gamma/(gamma - 1));
-xi_1 = 1 + gamma/(gamma-1)*u_1.^2;
-eta_1 = 1 - (Cp*(xi_1 - 1) - 1)/Ca;
+% In terms of eta
+XX = Ca/Cp;
+A1 = 1+(-1).*Cp.^(-1).*(1+Cp.^(-1).*(1+(-1).*gamma).*gamma.^(-1)).* ...
+  gamma.^(-1)+(-1).*gamma.^(-1).*XX; %u
+B1 = (1/3).*(gamma.^(-1)+(1+Cp.^(-1).*(1+(-1).*gamma).*gamma.^(-1)).* ...
+  gamma.^(-1)+((-1)+gamma).*gamma.^(-2).*XX); %u^3
+
+K1 = a*XX/2*sqrt(gamma-1)/sqrt(gamma)*t;
+uu_1 = 6.^(-2/3).*B1.^(-1).*(9.*A1.*B1.^2.*(Cp.^(-1)).^(1/2)+9.*B1.^3.*( ...
+  Cp.^(-1)).^(3/2)+9.*B1.^2.*K1+3.^(1/2).*(B1.^3.*(4.*A1.^3+27.*B1.* ...
+  Cp.^(-3).*(B1+A1.*Cp+(Cp.^(-1)).^(-3/2).*K1).^2)).^(1/2)).^(-1/3).* ...
+  ((-2).*3.^(1/3).*A1.*B1+2.^(1/3).*(9.*A1.*B1.^2.*(Cp.^(-1)).^(1/2) ...
+  +9.*B1.^3.*(Cp.^(-1)).^(3/2)+9.*B1.^2.*K1+3.^(1/2).*(B1.^3.*(4.* ...
+  A1.^3+27.*B1.*Cp.^(-3).*(B1+A1.*Cp+(Cp.^(-1)).^(-3/2).*K1).^2)).^( ...
+  1/2)).^(2/3));
+
+% Alternative perturbation solution with eta = 1 - phi, phi << 1
+% phii_1 = (uu_1.^2 - 1/Cp)/XX;
+% 
+% xi_1 = 1 + gamma/(gamma-1)*u_1.^2;
+% eta_1 = computeEta(xi_1, Ca, Cp); %1 - (Cp*(xi_1 - 1) - 1)/Ca;
 
 % Critical time (xi = b)
 t1 = t(xi_1 < b);
+t2 = t(xi_1 >= b);
 tb = t1(end);
 tbb = -A*2*gamma/(gamma + 1)*(1 - b^((1 + gamma)/(2*gamma))) +...
     B*2*gamma/(1 - gamma)*(1 - b^((1 - gamma)/(2*gamma)));
 etab = 1 - (Cp*(b - 1) - 1)/Ca;
+
+%% Sonic theoretical approximate solution (alpha, beta << 1)
+% Coefficients
+C_ = A*2*gamma/(1 + gamma) - 2*gamma/(1 - gamma)*B;
+D_ = A*b^((1 - gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
+
+% First order solution
+% xi_2 = b + (t - tb)/D_;
+
+% Second order solution
+phi = A*b^((1-gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
+psi = A*(1-gamma)/(4*gamma)*b^((1-3*gamma)/(2*gamma)) -...
+    B*(1 - 3*gamma)/(4*gamma)*b^((1 - 5*gamma)/(2*gamma));
+xi_2 = b + (-phi + sqrt(phi^2 + 4*psi*(t - tb)))/(2*psi);
+eta_2 = computeEta(xi_1, Ca, Cp); %1 - (Cp*(xi_2 - 1) - 1)/Ca;
+
+tf = 1 - (Ca/Cp + 1 + 1/Cp - b)*D_;
 
 %% Numerically, solving the nonlinear equation
 ff = @(t) 2.^(2/3).*(A+(-1).*B).*((-1)+gamma).*gamma.*((-3).*a.*(2.*A+B.*(( ...
@@ -108,35 +145,10 @@ gg = @(t) (1 + gamma/(gamma-1)*ff(t).^2 - b);
 t0 = 0.1; % starting point
 tb_ = fzero(gg, t0);
 
-%% Sonic theoretical approximate solution (alpha, beta << 1)
-% Coefficients
-C_ = A*2*gamma/(1 + gamma) - 2*gamma/(1 - gamma)*B;
-D_ = A*b^((1 - gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
-
-% First order solution
-% xi_2 = b + (t - tb)/D_;
-
-% Second order solution
-phi = A*b^((1-gamma)/(2*gamma)) - B*b^((1 - 3*gamma)/(2*gamma));
-psi = A*(1-gamma)/(4*gamma)*b^((1-3*gamma)/(2*gamma)) -...
-    B*(1 - 3*gamma)/(4*gamma)*b^((1 - 5*gamma)/(2*gamma));
-xi_2 = b + (-phi + sqrt(phi^2 + 4*psi*(t - tb)))/(2*psi);
-
-
-eta_2 = 1 - (Cp*(xi_2 - 1) - 1)/Ca;
-
-tf = 1 - (Ca/Cp + 1 + 1/Cp - b)*D_;
-
-
-
 %% Critical time
-% tbb = (b - 1)*D_;
-% xibb = 1 + tbb/D_;
-
 tbb = psi*(2*b - 1 - b^2) + phi*(b - 1);
 xibb = b;
 etabb = 1 - (Cp*(xibb - 1) - 1)/Ca;
-
 
 %% Final values
 eta_f = 0;
@@ -192,15 +204,15 @@ Wt = gradient((eta - Lambda).*xi.^(1/gamma))./gradient(t)*...
 
 %% Dimensionless plots
 figure,
-subplot(311), plot(t, eta, t_, eta_, 'r--', tb, etab, 'o',...
-    tbb, etab, 's'), hold on
+subplot(311), plot(t, eta, t_, eta_, 'r--', tb, etab, 'ko',...
+    tbb, etab, 'ks'), hold on
 % ylim([0 1])
 % plot(t(end), etaf, 'ro'), hold on
 % plot(t(end), etaft, 'gs')
-legend('RK45', 'Theo.', 'location', 'southwest')
+legend('RK45', 'Theo.', 'Num.', 'Theo.', 'location', 'southwest')
 ylabel('$\eta$')
 
-subplot(312), plot(t, etaDot, t, t*0 - 1, 'r--')
+subplot(312), plot(t, etaDot, t_, gradient(eta_)./gradient(t_), 'r--')
 ylabel('$\dot{\eta}$')
 
 % subplot(313), plot(t, etaDdot)
@@ -211,8 +223,8 @@ ylabel('$\dot{\eta}$')
 % saveas(gcf, 'eta','png')
 
 % figure,
-subplot(313), plot(t, xi, t, xi*0 + b, 'k--', tb, b, 'o',...
-    tbb, b, 's'), hold on
+subplot(313), plot(t, xi, t, xi*0 + b, 'k--', tb, b, 'ko',...
+    tbb, b, 'ks'), hold on
 % plot(t(end), xif, 'ro'), hold on
 % plot(t(end), xift, 'gs')
 % legend('Exact', 'Num. std.', 'Theo. std.')
@@ -221,22 +233,24 @@ ylabel('$\xi$')
 % subplot(212), plot(t, xiDot)
 % ylabel('$\dot{\xi}$')
 xlabel('$\tau$')
-% 
+%
+print(gcf, 'eta_etaDot_xi_solution','-dpdf','-fillpage')
+
 % saveas(gcf, ['figs/lambda_' num2str(lambda)], 'fig');
 % saveas(gcf, 'xi','epsc')
 % saveas(gcf, 'xi','png')
 
 %%
 figure,
-subplot(311), plot(t, eta, t_, eta_, 'r--', tb, etab, 'o',...
-    tbb, etabb, 's'), hold on
+subplot(311), plot(t, eta, t_, eta_, 'r--', tb, etab, 'ko',...
+    tbb, etabb, 'ks'), hold on
 % ylim([0 1])
 % plot(t(end), etaf, 'ro'), hold on
 % plot(t(end), etaft, 'gs')
-legend('RK45', 'Theo.', 'location', 'southwest')
+legend('RK45', 'Theo.', 'Num.', 'Theo.', 'location', 'southwest')
 ylabel('$\eta$')
 
-subplot(312), plot(t, etaDot, t, t*0 - 1, 'r--')
+subplot(312), plot(t, etaDot, t_, gradient(eta_)./gradient(t_), 'r--')
 ylabel('$\dot{\eta}$')
 
 % subplot(313), plot(t, etaDdot)
@@ -248,7 +262,7 @@ ylabel('$\dot{\eta}$')
 
 % figure,
 subplot(313), plot(t, xi, t_, xi_, 'r--',...
-    t, xi*0 + b, 'k--', tb, b, 'o', tbb, xibb, 's'), hold on
+    t, xi*0 + b, 'k--', tb, b, 'ko', tbb, xibb, 'ks'), hold on
 % plot(t(end), xif, 'ro'), hold on
 % plot(t(end), xift, 'gs')
 % legend('Exact', 'Num. std.', 'Theo. std.')
@@ -264,8 +278,10 @@ xlabel('$\tau$')
 
 %% Phase portraits
 figure,
-subplot(221), plot(xi, eta, xi_, eta_, 'r--')
+subplot(221), plot(xi, eta, xi_, eta_, 'r--', b, etab, 'ko', ...
+    xibb, etabb, 'ks')
 ylabel('$\eta$')
+legend('RK45', 'Theo.', 'Num.', 'Theo.', 'location', 'southwest')
 axis square
 
 subplot(222), plot(etaDot, eta, gradient(eta_)./gradient(t_), eta_, 'r--')
@@ -277,29 +293,30 @@ xlabel('$\xi$')
 ylabel('$\dot{\eta}$')
 axis square
 
+print(gcf, 'phasePortraits','-dpdf','-fillpage')
+
 % saveas(gcf, ['figs/eta_vs_xi_lambda_' num2str(lambda)], 'fig');
 
 %%
-figure,
-subplot(211), plot(t, eta, t_, eta_, 'r--', tb, etab, 'o',...
-    tbb, etabb, 's'), hold on
-% ylim([0 1])
-% plot(t(end), etaf, 'ro'), hold on
-% plot(t(end), etaft, 'gs')
-legend('RK45', 'Theo.', 'location', 'southwest')
-ylabel('$\eta$')
-xlabel('$\tau$')
+% figure,
+% subplot(211), plot(t, eta, t_, eta_, 'r--', tb, etab, 'ko',...
+%     tbb, etabb, 'ks'), hold on
+% % ylim([0 1])
+% % plot(t(end), etaf, 'ro'), hold on
+% % plot(t(end), etaft, 'gs')
+% legend('RK45', 'Theo.', 'location', 'southwest')
+% ylabel('$\eta$')
+% xlabel('$\tau$')
+% 
+% subplot(212), plot(xi, eta, xi_, eta_, 'r--', tb, b, 'ko',...
+%     tbb, xibb, 'ks'), hold on
+% % ylim([0 1])
+% % plot(t(end), etaf, 'ro'), hold on
+% % plot(t(end), etaft, 'gs')
+% legend('RK45', 'Theo.', 'location', 'southwest')
+% ylabel('$\eta$')
+% xlabel('$\xi$')
 
-figure,
-plot(xi, eta, xi_, eta_, 'r--', tb, b, 'o',...
-    tbb, xibb, 's'), hold on
-% ylim([0 1])
-% plot(t(end), etaf, 'ro'), hold on
-% plot(t(end), etaft, 'gs')
-legend('RK45', 'Theo.', 'location', 'southwest')
-ylabel('$\eta$')
-xlabel('$\xi$')
-axis square
 
 %% Energy plots
 %Potencia y energía desarrollada por la masa cayendo
