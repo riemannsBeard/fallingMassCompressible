@@ -707,30 +707,27 @@ print(gcf, 'phasePortraits','-dpdf','-fillpage')
 % saveas(gcf, ['figs/eta_vs_xi_lambda_' num2str(lambda)], 'fig');
 
 %% Closed-valve solution
+% Theoretical solution
+[eta_ss0, xi_ss0] = computeTheoSS(Ca_(:,1), Cp_(:,1), gamma);
+
 figure,
 % scatter(L, eta_ss, [], xi_ss, 'filled')
 yyaxis left
-plot(L, eta_ss)
+p1 = plot(L, eta_ss, '-', L, eta_ss0, '--');
 ylabel('$\eta_s$')
 yyaxis right
-plot(L, xi_ss)
+plot(L, xi_ss, '-', L, xi_ss0, '--')
 ylabel('$\xi_s$')
 xlabel('$\Lambda$')
+axis square
+legend([p1(1) p1(2)], 'Num.', 'Theo.', 'location', 'northwest')
+
 % cb = colorbar;
 % cb.TickLabelInterpreter = 'latex';
 % cb.Label.String = '$\xi_ss$';
 % cb.Label.Interpreter = 'latex';
 
-chi = Ca_./Cp_;
-figure,
-% scatter(L, eta_ss, [], xi_ss, 'filled')
-yyaxis left
-plot(chi, eta_ss)
-ylabel('$\eta_s$')
-yyaxis right
-plot(chi, xi_ss)
-ylabel('$\xi_s$')
-xlabel('$\chi$')
+
 
 
 %%
