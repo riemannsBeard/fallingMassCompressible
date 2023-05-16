@@ -258,11 +258,13 @@ for j = 1:length(d)
         %         gg = @(t) (1 + gamma/(gamma-1)*ff(t).^2 - b);
         %         t0 = 0.1; % starting point
         %         % tb_ = fzero(gg, t0);
-        
-        lambda = 1e-4;
-        myfun = @(eta) zeroGas(Cp, Ca, lambda, gamma, eta);
-        eta_ss(i,j) = fzero(myfun, 0.5);
-        xi_ss(i,j) = ((1 - lambda)./(eta_ss - lambda)).^gamma;
+
+        if j == 1
+            lambda = 1e-4;
+            myfun = @(Eta) zeroGas(Cp, Ca, lambda, gamma, Eta);
+            eta_ss(i) = fzero(myfun, 1 - 0.01*L(i));
+            xi_ss(i) = ((1 - lambda)./(eta_ss(i) - lambda)).^gamma;
+        end
         
         %% Storing and other stuff
         
@@ -412,33 +414,33 @@ axis square
 
 
 
-figure,
-subplot(121),
-contourf(d/D, L/D, Wtt, 12), hold on
-xlabel('$\delta$'), ylabel('$\Lambda$')
+% figure,
+% subplot(121),
+% contourf(d/D, L/D, Wtt, 12), hold on
+% xlabel('$\delta$'), ylabel('$\Lambda$')
+% % cb = colorbar;
+% caxis([1 3])
+% cb.Label.Interpreter = 'latex';
+% % cb.Label.String = '$\mathcal{W}_t$';
+% cb.Label.FontSize = 20;
+% cb.TickLabelInterpreter = 'latex';
+% plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+% plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
+% axis square
+% 
+% subplot(122),
+% contourf(d/D, L/D, Wtt_, 12), hold on
+% xlabel('$\delta$'), %ylabel('$\Lambda$')
+% yticks([]);
 % cb = colorbar;
-caxis([1 3])
-cb.Label.Interpreter = 'latex';
+% caxis([1 3])
+% cb.Label.Interpreter = 'latex';
 % cb.Label.String = '$\mathcal{W}_t$';
-cb.Label.FontSize = 20;
-cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
-plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
-axis square
-
-subplot(122),
-contourf(d/D, L/D, Wtt_, 12), hold on
-xlabel('$\delta$'), %ylabel('$\Lambda$')
-yticks([]);
-cb = colorbar;
-caxis([1 3])
-cb.Label.Interpreter = 'latex';
-cb.Label.String = '$\mathcal{W}_t$';
-cb.Label.FontSize = 20;
-cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
-plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
-axis square
+% cb.Label.FontSize = 20;
+% cb.TickLabelInterpreter = 'latex';
+% plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+% plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
+% axis square
 
 figure,
 subplot(121),
@@ -703,6 +705,33 @@ axis square
 print(gcf, 'phasePortraits','-dpdf','-fillpage')
 
 % saveas(gcf, ['figs/eta_vs_xi_lambda_' num2str(lambda)], 'fig');
+
+%% Closed-valve solution
+figure,
+% scatter(L, eta_ss, [], xi_ss, 'filled')
+yyaxis left
+plot(L, eta_ss)
+ylabel('$\eta_s$')
+yyaxis right
+plot(L, xi_ss)
+ylabel('$\xi_s$')
+xlabel('$\Lambda$')
+% cb = colorbar;
+% cb.TickLabelInterpreter = 'latex';
+% cb.Label.String = '$\xi_ss$';
+% cb.Label.Interpreter = 'latex';
+
+chi = Ca_./Cp_;
+figure,
+% scatter(L, eta_ss, [], xi_ss, 'filled')
+yyaxis left
+plot(chi, eta_ss)
+ylabel('$\eta_s$')
+yyaxis right
+plot(chi, xi_ss)
+ylabel('$\xi_s$')
+xlabel('$\chi$')
+
 
 %%
 % figure,
