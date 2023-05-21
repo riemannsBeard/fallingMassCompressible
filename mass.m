@@ -14,14 +14,14 @@ set(0, 'defaultLegendInterpreter', 'Latex')
 
 %% Data
 D = 1;
-d = 0.016;
+d = 0.0441;
 rho_h2o = 1e3;
 rho_atm = 1.225;
 patm = 1e5;
 p0 = patm;
 g = 9.85;
 h = 0.25;
-L = 17.25; %12;
+L = 10;
 T0 = 300;
 A = 0.25*pi*D^2;
 m = 1;
@@ -45,8 +45,7 @@ tc = L/delta*sqrt(rho_atm/patm/gamma)*((gamma + 1)/2)^((gamma + 1)/...
     (2*gamma - 2));
 
 alpha = L/(g*tc^2);
-%beta = alpha;
-dc = 1; %beta*m/(alpha*tc);
+dc = 1e3;
 beta = dc*L/(m*g*tc);
 
 a = sqrt(2/(gamma - 1))*((gamma + 1)/2)^((gamma + 1)/(2*gamma - 2));
@@ -56,7 +55,7 @@ K = 1/gamma*(1 - Cp/Ca + 1/Ca);
 
 %% Calculations (variable velocity)
 %         tf = 10; %0.9*tc;
-tspan = linspace(0, 2, 2048);
+tspan = linspace(0, 1.5, 2*2048);
 y0 = [1, 0, 1];
 Opt = odeset('Events', @myEvent);
 [t, y] = ode45(@(t, y) ode_mass(t, y, Ca, Cp, gamma, Lambda, beta,...
@@ -73,9 +72,10 @@ vm = etaDot*L/tc;
 pg = xi*patm;
 
 %% Characterization of the oscillation amplitude
-[yupper,ylower] = envelope(eta, 1,'peak');
+tdd = 5*d;
+[yupper, ylower] = envelope(eta(t <= tdd), 10, 'peak');
 etaMean = 0.5*(yupper + ylower);
-etaMax = yupper - etaMean;
+etaMax = max(yupper - etaMean);
 
 %% Subsonic theoretical approximate solution (alpha, beta << 1)
 % Coefficients
@@ -138,9 +138,9 @@ if isempty(t1)
 else
     tb = t1(end);
 end
-tbb = -A*2*gamma/(gamma + 1)*(1 - b^((1 + gamma)/(2*gamma))) +...
-    B*2*gamma/(1 - gamma)*(1 - b^((1 - gamma)/(2*gamma)));
-etab = computeEta(b, Ca, Cp);
+% tbb = -A*2*gamma/(gamma + 1)*(1 - b^((1 + gamma)/(2*gamma))) +...
+%     B*2*gamma/(1 - gamma)*(1 - b^((1 - gamma)/(2*gamma)));
+% etab = computeEta(b, Ca, Cp);
 
 %% Sonic theoretical approximate solution (alpha, beta << 1)
 % Coefficients
@@ -181,7 +181,12 @@ t_ = [t(xi_1 <= b); t(xi_2 > b)];
 
 F = -beta*etaDot - 1 + Cp*(xi - 1) - Ca*(1 - eta);
 WtF = cumtrapz(t, F.*etaDot);
-WtF = lowpass(WtF, 1e-5, t(2)-t(1), 'ImpulseResponse', 'iir');
+% WtF = lowpass(WtF, 1e-5, t(2)-t(1), 'ImpulseResponse', 'iir');
+WtFF = WtF(end);
+
+PtF = F.*etaDot;
+% PtF = lowpass(PtF, 1e-5, t(2)-t(1), 'ImpulseResponse', 'iir');
+PtFF = max(PtF);
 
 % F_ = -1 + Cp*(xi_ - 1) - Ca*(1 - eta_);
 % WtF_ = cumtrapz(t, F_.*gradient(eta_)./gradient(t));
@@ -284,9 +289,19 @@ xlabel('$\tau$')
 
 % saveas(gcf, ['figs/Wt_lambda_' num2str(lambda)], 'fig');
 
-figure, plot(t, WtF)
+figure,
+subplot(221)
+plot(t/tf, WtF)
 ylabel('$\mathcal{W}_m$')
-xlabel('$\tau$')
+xlabel('$\tau/\tau_f$')
+axis square
+
+subplot(222)
+plot(t/tf, PtF)
+xlabel('$\tau/\tau_f$')
+ylabel('$\mathcal{P}_m$')
+axis square
+
 
 %% Dimensional plots
 % figure,
@@ -455,12 +470,12 @@ print(gcf, 'phasePortraits','-dpdf','-fillpage')
 %
 %
 %%
-fc = 30; Fs = 1/(t(2) - t(1));
-Wn = 2*(fc/Fs);
-
-[b_,a_] = butter(8, Wn); %El filtrosss orden 8. LA fc = 5 Hz
-
-xiMidline = filtfilt(b_, a_, xi); % La señal filtrá
-
-% %         etaMax(i,j)
-figure, plot(t, xi, t, xiMidline, 'r')
+% fc = 30; Fs = 1/(t(2) - t(1));
+% Wn = 2*(fc/Fs);
+% 
+% [b_,a_] = butter(8, Wn); %El filtrosss orden 8. LA fc = 5 Hz
+% 
+% xiMidline = filtfilt(b_, a_, xi); % La señal filtrá
+% 
+% % %         etaMax(i,j)
+% figure, plot(t, xi, t, xiMidline, 'r')

@@ -11,7 +11,6 @@ a = sqrt(2/(gamma - 1))*((gamma + 1)/2)^((gamma + 1)/(2*gamma - 2));
 b = ((gamma + 1)/2)^(gamma/(gamma - 1));
 
 dydt(1) = y(2);
-
 dydt(2) = (-1 + Cp*(y(3) - 1) - Ca*(1 - y(1)) - beta*y(2))/alpha0;
 
 if y(3) <= b
