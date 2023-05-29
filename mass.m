@@ -14,14 +14,14 @@ set(0, 'defaultLegendInterpreter', 'Latex')
 
 %% Data
 D = 1;
-d = 0.0441;
+d = 0.05;
 rho_h2o = 1e3;
 rho_atm = 1.225;
 patm = 1e5;
 p0 = patm;
 g = 9.85;
 h = 0.25;
-L = 10;
+L = 20;
 T0 = 300;
 A = 0.25*pi*D^2;
 m = 1;
@@ -45,7 +45,7 @@ tc = L/delta*sqrt(rho_atm/patm/gamma)*((gamma + 1)/2)^((gamma + 1)/...
     (2*gamma - 2));
 
 alpha = L/(g*tc^2);
-dc = 1e3;
+dc = 1000;
 beta = dc*L/(m*g*tc);
 
 a = sqrt(2/(gamma - 1))*((gamma + 1)/2)^((gamma + 1)/(2*gamma - 2));
@@ -290,17 +290,17 @@ xlabel('$\tau$')
 % saveas(gcf, ['figs/Wt_lambda_' num2str(lambda)], 'fig');
 
 figure,
-subplot(221)
-plot(t/tf, WtF)
+subplot(211)
+plot(t, WtF)
 ylabel('$\mathcal{W}_m$')
-xlabel('$\tau/\tau_f$')
-axis square
+% xlabel('$\tau/\tau_f$')
+% axis square
 
-subplot(222)
-plot(t/tf, PtF)
+subplot(212)
+plot(t, PtF)
 xlabel('$\tau/\tau_f$')
 ylabel('$\mathcal{P}_m$')
-axis square
+% axis square
 
 
 %% Dimensional plots
@@ -396,20 +396,22 @@ xlabel('$\tau$')
 % 
 
 %% Phase portraits
-figure('Renderer', 'painters', 'Position', [660 375 600 600]),
+figure('Renderer', 'painters', 'Position', [480 375 1024 600]),
 
-subplot(221), plot(xi, eta, xi_, eta_, 'r--',...
+subplot(131), plot(xi, eta, xi_, eta_, 'r--',...
     eta*0 + b, linspace(min(min(eta), min(eta_)),...
     max(max(eta), max(eta_)), length(eta)), 'k--')
+xlabel('$\xi$')
 ylabel('$\eta$')
 % legend('RK45', 'Theo.', 'Theo.', 'location', 'southwest')
 axis square
 
-subplot(222), plot(etaDot, eta, gradient(eta_)./gradient(t_), eta_, 'r--')
+subplot(132), plot(etaDot, eta, gradient(eta_)./gradient(t_), eta_, 'r--')
 xlabel('$\dot{\eta}$')
+ylabel('$\eta$')
 axis square
 
-subplot(223), plot(xi, etaDot, xi_, gradient(eta_)./gradient(t_), 'r--',...
+subplot(133), plot(xi, etaDot, xi_, gradient(eta_)./gradient(t_), 'r--',...
     etaDot*0 + b, linspace(min(min(etaDot), min(gradient(eta_)./gradient(t_))),...
     max(max(etaDot), max(gradient(eta_)./gradient(t_))), length(etaDot)), 'k--')
 xlabel('$\xi$')

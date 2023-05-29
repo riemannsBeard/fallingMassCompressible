@@ -3,7 +3,7 @@ close all
 clc
 
 %% Defaults
-FS = 18;
+FS = 24;
 LW = 1.5;
 set(0, 'defaultAxesFontSize', FS)
 set(0, 'defaultLineLineWidth', LW)
@@ -12,7 +12,7 @@ set(0, 'defaultAxesTickLabelInterpreter', 'Latex')
 set(0, 'defaultTextInterpreter', 'Latex')
 set(0, 'defaultLegendInterpreter', 'Latex')
 
-filename = 'massRange_betaSmall.mat';
+filename = 'massRange_beta_Cf1.mat';
 
 if exist(filename, 'file') ~= 0
     saveFlag = 0;
@@ -240,6 +240,7 @@ else
     %         WtF = lowpass(WtF, 1e-5, t(2)-t(1), 'ImpulseResponse', 'iir');
             PtF = F.*etaDot;
     %         PtF = lowpass(PtF, 1e-5, t(2)-t(1), 'ImpulseResponse', 'iir');
+%             WtF = movmean(WtF, 1e2);
             WtFF(i,j) = WtF(end);
             PtFF(i,j) = max(PtF);
             meanP(i,j) = 1/tf(i,j)*WtFF(i,j);
@@ -360,26 +361,34 @@ print(gcf, 'eta_etaDot_xi_solution','-dpdf','-fillpage')
 
 %% Energy plots
 %Potencia y energía desarrollada por la masa cayendo
-figure,
-subplot(211), plot(t*tc(i,j), 3.6*gradient(Wt)./gradient(t))
-ylabel('$P_t$ (kW)')
-
-subplot(212), plot(t*tc(i,j), 3.6*Wt)
-ylabel('$W_t$ (kWh)')
-xlabel('$t$ (s)')
-
+% figure,
+% subplot(211), plot(t*tc(i,j), 3.6*gradient(Wt)./gradient(t))
+% ylabel('$P_t$ (kW)')
+% 
+% subplot(212), plot(t*tc(i,j), 3.6*Wt)
+% ylabel('$W_t$ (kWh)')
+% xlabel('$t$ (s)')
+% 
 % saveas(gcf, ['figs/dim_Wt_lambda_' num2str(lambda)], 'fig');
-
-figure,
-subplot(211), plot(t, gradient(Wt)./gradient(t),...
-    t_, gradient(Wt_)./gradient(t_), 'r--')
-ylabel('$\dot{\mathcal{W}}_t$')
-
-subplot(212), plot(t, Wt, t_, Wt_, 'r--')
-ylabel('$\mathcal{W}_t$')
-xlabel('$\tau$')
+% 
+% figure,
+% subplot(211), plot(t, gradient(Wt)./gradient(t),...
+%     t_, gradient(Wt_)./gradient(t_), 'r--')
+% ylabel('$\dot{\mathcal{W}}_t$')
+% 
+% subplot(212), plot(t, Wt, t_, Wt_, 'r--')
+% ylabel('$\mathcal{W}_t$')
+% xlabel('$\tau$')
 
 % saveas(gcf, ['figs/Wt_lambda_' num2str(lambda)], 'fig');
+
+figure,
+subplot(211), plot(t/tf(end,end), PtF)
+ylabel('${\mathcal{P}}_m$')
+
+subplot(212), plot(t/tf(end,end), WtF)
+ylabel('$\mathcal{W}_m$')
+xlabel('$\tau$')
 
 %% Energy summary plot
 figure,
@@ -389,7 +398,7 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\mathcal{W}_t$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
 plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
@@ -402,9 +411,9 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\mathcal{W}_m$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+plot(d/D, LambdaMax, 'w--', 'linewidth', 2.5)
 % plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
 axis square
 
@@ -417,37 +426,39 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\mathcal{W}_m$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+plot(d/D, LambdaMax, 'w--', 'linewidth', 2.5)
 % plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
 axis square
 
 figure,
-contourf(d/D, L/D, filloutliers(PtFF, "nearest","mean")), hold on
+contourf(d/D, L/D, log(filloutliers(PtFF, "nearest","mean"))), hold on
+colormap hot
 xlabel('$\delta$'), ylabel('$\Lambda$')
 cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
-cb.Label.String = '$\mathcal{P}_m$';
-cb.Label.FontSize = 20;
+cb.Label.String = '$\log(\mathcal{P}_{\max})$';
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+% plot(d/D, LambdaMax, 'k--', 'linewidth', 2.5)
 % plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
 axis square
 
 figure,
-p = pcolor(d/D, L/D, filloutliers(PtFF,"nearest","mean")); hold on
+p = pcolor(d/D, L/D, log(filloutliers(PtFF,"nearest","mean"))); hold on
 shading flat
+colormap hot
 set(p,'EdgeColor','none');
 xlabel('$\delta$'), ylabel('$\Lambda$')
 cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
-cb.Label.String = '$\mathcal{P}_m$';
-cb.Label.FontSize = 20;
+cb.Label.String = '$\log(\mathcal{P}_{\max})$';
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
+% plot(d/D, LambdaMax, 'k--', 'linewidth', 2.5)
 % plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
 axis square
 
@@ -488,7 +499,7 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$C_A$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -500,7 +511,7 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$C_P$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -512,7 +523,7 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\alpha$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -524,7 +535,7 @@ cb = colorbar;
 % caxis([1 4])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\beta$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -535,7 +546,7 @@ ylabel('$\Lambda$')
 cb = colorbar;
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$C_A/C_P$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 
 figure,
@@ -555,7 +566,7 @@ ylabel('$\Lambda$')
 cb = colorbar;
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\tau_f$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 
 figure,
@@ -565,7 +576,7 @@ ylabel('$\Lambda$')
 cb = colorbar;
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\max{\eta}$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 plot(d/D, LambdaMax, 'r--', 'linewidth', 2.5)
 
@@ -576,7 +587,7 @@ ylabel('$\Lambda$')
 cb = colorbar;
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\max{\xi}$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 plot(d/D, LambdaXiMin, 'r--', 'linewidth', 2.5)
 
@@ -588,7 +599,7 @@ cb = colorbar;
 % caxis([0 0.75])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\eta_b$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -598,7 +609,7 @@ xlabel('$\delta$'), %ylabel('$\Lambda$')
 cb = colorbar;
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\tau_b$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 hold on,
 % plot(d, d*0 + 10, 'r--', d, d*0 + 9, 'r--')
@@ -612,7 +623,7 @@ cb = colorbar;
 caxis([0.1 0.6])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\eta_b$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -623,7 +634,7 @@ cb = colorbar;
 caxis([0.1 0.6])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\eta_{b0}$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -634,7 +645,7 @@ cb = colorbar;
 caxis([0.1 0.7])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\tau_b$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -645,7 +656,7 @@ cb = colorbar;
 caxis([0.1 0.7])
 cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\tau_{b0}$';
-cb.Label.FontSize = 20;
+cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
 axis square
 
@@ -722,18 +733,20 @@ xlabel('$\tau$')
 
 %% Phase portraits
 figure,
-subplot(221), plot(xi, eta, xi_, eta_, 'r--',...
+subplot(131), plot(xi, eta, xi_, eta_, 'r--',...
     eta*0 + b, linspace(min(min(eta), min(eta_)),...
     max(max(eta), max(eta_)), length(eta)), 'k--')
+xlabel('$\xi$')
 ylabel('$\eta$')
 % legend('RK45', 'Theo.', 'Theo.', 'location', 'southwest')
 axis square
 
-subplot(222), plot(etaDot, eta, gradient(eta_)./gradient(t_), eta_, 'r--')
+subplot(132), plot(etaDot, eta, gradient(eta_)./gradient(t_), eta_, 'r--')
 xlabel('$\dot{\eta}$')
+ylabel('$\eta$')
 axis square
 
-subplot(223), plot(xi, etaDot, xi_, gradient(eta_)./gradient(t_), 'r--',...
+subplot(133), plot(xi, etaDot, xi_, gradient(eta_)./gradient(t_), 'r--',...
     etaDot*0 + b, linspace(min(min(etaDot), min(gradient(eta_)./gradient(t_))),...
     max(max(etaDot), max(gradient(eta_)./gradient(t_))), length(etaDot)), 'k--')
 xlabel('$\xi$')
