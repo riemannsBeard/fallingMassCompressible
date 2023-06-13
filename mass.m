@@ -14,7 +14,7 @@ set(0, 'defaultLegendInterpreter', 'Latex')
 
 %% Data
 D = 1;
-d = 0.05;
+d = 0.002;
 rho_h2o = 1e3;
 rho_atm = 1.225;
 patm = 1e5;

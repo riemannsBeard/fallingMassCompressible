@@ -12,7 +12,7 @@ set(0, 'defaultAxesTickLabelInterpreter', 'Latex')
 set(0, 'defaultTextInterpreter', 'Latex')
 set(0, 'defaultLegendInterpreter', 'Latex')
 
-filename = 'massRange_beta_Cf1.mat';
+filename = 'massRange_beta_Cf1000.mat';
 
 if exist(filename, 'file') ~= 0
     saveFlag = 0;
@@ -413,7 +413,7 @@ cb.Label.Interpreter = 'latex';
 cb.Label.String = '$\mathcal{W}_m$';
 cb.Label.FontSize = 24;
 cb.TickLabelInterpreter = 'latex';
-plot(d/D, LambdaMax, 'w--', 'linewidth', 2.5)
+% plot(d/D, LambdaMax, 'w--', 'linewidth', 2.5)
 % plot(d/D, LambdaXiMin, 'k--', 'linewidth', 2.5)
 axis square
 
